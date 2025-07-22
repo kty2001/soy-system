@@ -1,0 +1,20 @@
+.venv
+build
+dist
+images
+yolo_run
+__pycache__
+results
+uploads
+
+*.pth
+*.pt
+*.exe
+*.7z
+*.zip
+
+# Electron
+build
+dist
+node_modules
+server

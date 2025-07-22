@@ -1,0 +1,32 @@
+{
+  "appId": "com.soy.viewer",
+  "productName": "soy AI System",
+  "files": [
+    "main.js",
+    "build/**/*",
+    "package.json",
+    "node_modules/**/*"
+  ],
+  "extraMetadata": {
+    "main": "main.js"
+  },
+  "directories": {
+    "buildResources": "public",
+    "output": "dist"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "public/favicon.ico",
+    "signAndEditExecutable": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": false
+  },
+  "electronVersion": "24.8.8",
+  "asar": false,
+  "asarUnpack": [
+    "node_modules/**/*"
+  ]
+}
