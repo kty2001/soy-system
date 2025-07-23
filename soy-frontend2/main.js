@@ -16,13 +16,12 @@ function startServer() {
     const out = fs.createWriteStream(path.join(__dirname, 'server_out.log'));
     const err = fs.createWriteStream(path.join(__dirname, 'server_err.log'));
     serverProcess = spawn(exePath, [], {
-      detached: false,
+      detached: true,
       stdio: ['ignore', 'pipe', 'pipe']
     });
     serverProcess.stdout.pipe(out);
     serverProcess.stderr.pipe(err);
 
-    serverProcess.unref();
     console.log('서버 실행됨:', exePath);
   } else {
     console.warn('서버 EXE 파일을 찾을 수 없습니다:', exePath);
@@ -32,8 +31,19 @@ function startServer() {
 function stopServer() {
   if (serverProcess && !serverProcess.killed) {
     try {
-      process.kill(-serverProcess.pid); // detached 프로세스는 -PID로 그룹 종료
-      console.log('서버 프로세스 종료됨');
+      if (process.platform === 'win32') {
+        const { exec } = require('child_process');
+        exec('taskkill /IM soy_AI_Analysis.exe /F', (err, stdout, stderr) => {
+          if (err) {
+            console.error('서버 종료 실패:', err);
+          } else {
+            console.log('서버 프로세스 종료됨');
+          }
+        });
+      } else {
+        process.kill(serverProcess.pid, 'SIGTERM');
+        console.log('서버 프로세스 종료됨');
+      }
     } catch (err) {
       console.warn('서버 종료 중 오류 발생:', err);
     }
