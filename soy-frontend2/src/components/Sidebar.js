@@ -32,7 +32,7 @@ const Sidebar = () => {
         두유 분석
       </NavLink>
 
-      <NavLink 
+      {/* <NavLink 
         to="/soymilk"
         className={({ isActive }) => `
           flex items-center p-md rounded-md mb-sm text-textPrimary
@@ -54,7 +54,7 @@ const Sidebar = () => {
       >
         <FaWaveSquare className="mr-md text-lg" />
         두유 영상 예측
-      </NavLink>
+      </NavLink> */}
     </nav>
   );
 };

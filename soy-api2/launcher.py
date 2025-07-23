@@ -3,6 +3,12 @@ import os
 import sys
 import uvicorn
 from pathlib import Path
+
+if any("--multiprocessing-fork" in arg for arg in sys.argv):
+    with open("trace.log", "a", encoding="utf-8") as f:
+        f.write("Detected multiprocessing fork process. Skipping server startup.\n")
+    sys.exit(0)
+
 try:
     from app.main import app
 except Exception as e:

@@ -3,53 +3,6 @@ import FileDropzone from '../components/FileDropzone';
 import AnalysisResultDisplay from '../components/AnalysisResultDisplay';
 import { processSoyanalysis } from '../utils/api';
 
-// const SoyanalysisPage = () => {
-//   const [result, setResult] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   const handleFileDrop = async (file) => {
-//     setLoading(true);
-//     setError(null);
-    
-//     try {
-//       const response = await processSoyanalysis(file);
-//       setResult(response);
-//     } catch (err) {
-//       setError(err.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <PageContainer>
-//       <Title>두유 농도 분석</Title>
-//       <Description>
-//         두유 이미지의 값을 분석하여 min_index와 width를 계산합니다.
-//       </Description>
-
-//       {error && <ErrorMessage>{error}</ErrorMessage>}
-
-//       <FileDropzone
-//         onFileDrop={handleFileDrop}
-//         acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}
-//         fileTypeDescription="PNG, JPG, BMP 파일만 허용됩니다."
-//       />
-
-//       {loading ? (
-//         <LoadingContainer>
-//           <LoadingText>이미지 처리 중...</LoadingText>
-//         </LoadingContainer>
-//       ) : (
-//         <AnalysisResultDisplay result={result} metricName="선명도" />
-//       )}
-//     </PageContainer>
-//   );
-// };
-
-// export default SoyanalysisPage; 
-
 const SoyanalysisPage = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -81,7 +34,7 @@ const SoyanalysisPage = () => {
           {error}
         </div>
       )}
-
+      
       <FileDropzone
         onFileDrop={handleFileDrop}
         acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}

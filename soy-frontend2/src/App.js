@@ -12,8 +12,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/soyanalysis" element={<SoyanalysisPage />} />
-        <Route path="/soymilk" element={<SoymilkPage />} />
-        <Route path="/soyvid" element={<SoyvidPage />} />
+        {/* <Route path="/soymilk" element={<SoymilkPage />} />
+        <Route path="/soyvid" element={<SoyvidPage />} /> */}
       </Routes>
     </Layout>
   );

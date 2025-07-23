@@ -121,12 +121,12 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
 
     print("marks:", marks)
     print("all_marks:", all_marks)
-    for j in marks:
-        cv2.line(left_crop_image, (j, 0), (j, left_crop_image.shape[0]), (0, 0, 0), 2)
-    cv2.imshow("left cropped Image", left_crop_image)
-    cv2.imshow("Cropped Image", crop_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # for j in marks:
+    #     cv2.line(left_crop_image, (j, 0), (j, left_crop_image.shape[0]), (0, 0, 0), 2)
+    # cv2.imshow("left cropped Image", left_crop_image)
+    # cv2.imshow("Cropped Image", crop_image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return all_marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
 

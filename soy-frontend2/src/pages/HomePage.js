@@ -25,7 +25,7 @@ const HomePage = () => {
           </p>
         </Link>
 
-        <Link 
+        {/* <Link 
           to="/soymilk"
           className="bg-surface rounded-md p-lg shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-fast flex flex-col items-center text-center"
         >
@@ -49,7 +49,7 @@ const HomePage = () => {
           <p className="text-textSecondary text-sm">
             두유 측정기 영상에서 농도를 예측합니다.
           </p>
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

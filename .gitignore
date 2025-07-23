@@ -6,6 +6,7 @@ yolo_run
 __pycache__
 results
 uploads
+models
 
 *.pth
 *.pt
