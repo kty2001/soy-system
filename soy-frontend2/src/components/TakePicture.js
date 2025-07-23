@@ -40,7 +40,6 @@ const TakePicture = () => {
       <h2 className="text-textPrimary text-2xl mb-md">카메라 촬영</h2>
       <div className="flex gap-lg flex-wrap">
 
-        {/* 카메라 뷰 */}
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">카메라 화면</h3>
           <div className="p-md flex justify-center items-center bg-black min-h-[300px]">
@@ -61,7 +60,6 @@ const TakePicture = () => {
           </div>
         </div>
 
-        {/* 촬영된 이미지 뷰 */}
         {capturedImage && (
           <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
             <h3 className="p-md bg-primary text-white m-0">촬영된 이미지</h3>
@@ -73,13 +71,9 @@ const TakePicture = () => {
               />
             </div>
             <div className="p-md flex justify-end">
-              <a
-                href={capturedImage}
-                download="captured_image.png"
+              <a href={capturedImage} download="captured_image.png"
                 className="inline-block px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
-              >
-                이미지 저장
-              </a>
+              >이미지 저장</a>
             </div>
           </div>
         )}

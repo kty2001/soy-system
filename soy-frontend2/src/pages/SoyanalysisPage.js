@@ -46,7 +46,7 @@ const SoyanalysisPage = () => {
             });
         }}
       />
-      
+      <div className="my-md" />
       <FileDropzone
         onFileDrop={handleFileDrop}
         acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}
