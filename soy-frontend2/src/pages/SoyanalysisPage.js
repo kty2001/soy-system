@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FileDropzone from '../components/FileDropzone';
 import AnalysisResultDisplay from '../components/AnalysisResultDisplay';
 import { processSoyanalysis } from '../utils/api';
+import TakePicture from '../components/TakePicture';
 
 const SoyanalysisPage = () => {
   const [result, setResult] = useState(null);
@@ -34,6 +35,17 @@ const SoyanalysisPage = () => {
           {error}
         </div>
       )}
+      
+      <TakePicture
+        onCapture={(imageDataUrl) => {
+          fetch(imageDataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], "captured_image.png", { type: "image/png" });
+              handleFileDrop(file);
+            });
+        }}
+      />
       
       <FileDropzone
         onFileDrop={handleFileDrop}
