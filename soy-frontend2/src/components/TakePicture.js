@@ -8,7 +8,9 @@ const TakePicture = () => {
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 } } // 💡 해상도 요청 추가
+      });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -23,7 +25,8 @@ const TakePicture = () => {
   const captureImage = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
+    console.log('Video resolution:', video.videoWidth, video.videoHeight);
+    
     if (video && canvas) {
       const ctx = canvas.getContext('2d');
       canvas.width = video.videoWidth;

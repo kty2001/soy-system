@@ -117,7 +117,8 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     all_marks.sort()
     all_marks.append(marks[-1])
 
-    crop_image = left_crop_image[:, marks[0]:marks[-1]]
+    # crop_image = left_crop_image[:, marks[0]:marks[-1]]
+    crop_image = left_crop_image[:, marks[0]-30:marks[-1]+30]
 
     print("marks:", marks)
     print("all_marks:", all_marks)
@@ -196,6 +197,10 @@ def analyze_image(image, pixel_values):
 
     return img_np, width, min_index
 
+def get_prediction(all_marks, min_index):
+    closest_index = min(range(len(all_marks)), key=lambda i: abs(all_marks[i] - min_index))
+    print(f"가장 가까운 인덱스: {closest_index}, 값: {all_marks[closest_index]}")
+    return closest_index, all_marks[closest_index]
 
 @router.post("/process", response_model=AnalysisResponse, responses={400: {"model": ErrorResponse}})
 async def process_image(request: Request, file: UploadFile = File(...)):
@@ -236,9 +241,10 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         print("mark cropped image shape:", analysis_image.shape)
 
         analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
+        predict_value, predict_index = get_prediction(all_marks, min_index)
 
         # 처리된 이미지를 PIL로 변환
-        cropped_pil = Image.fromarray(analysis_image)
+        cropped_pil = Image.fromarray(cv2.rotate(analysis_image, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)
         
         # 출력 이미지 저장
@@ -264,13 +270,15 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         return AnalysisResponse(
             input_width=input_w,
             input_height=input_h,
-            output_width=mark_crop_image.shape[1],
-            output_height=mark_crop_image.shape[0],
+            output_width=cropped_pil.size[0],
+            output_height=cropped_pil.size[1],
             input_metric=1,
             output_metric=1,
             average_angle=average_angle,
             min_index=min_index,
             width=width,
+            predict_value=predict_value,
+            predict_index=predict_index,
             input_image_url=input_url,
             cropped_image_url=cropped_output_url,
             output_image_url=output_url,
