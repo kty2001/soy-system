@@ -117,8 +117,7 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     all_marks.sort()
     all_marks.append(marks[-1])
 
-    # crop_image = left_crop_image[:, marks[0]:marks[-1]]
-    crop_image = left_crop_image[:, marks[0]-30:marks[-1]+30]
+    crop_image = left_crop_image[:, marks[0]:marks[-1]]
 
     print("marks:", marks)
     print("all_marks:", all_marks)
@@ -193,14 +192,25 @@ def analyze_image(image, pixel_values):
     img_pil = Image.open(buf).convert("RGB")
     img_np = np.array(img_pil)
 
-    plt.close(fig)  # 메모리 누수 방지
+    plt.close(fig)
 
     return img_np, width, min_index
 
 def get_prediction(all_marks, min_index):
-    closest_index = min(range(len(all_marks)), key=lambda i: abs(all_marks[i] - min_index))
-    print(f"가장 가까운 인덱스: {closest_index}, 값: {all_marks[closest_index]}")
-    return closest_index, all_marks[closest_index]
+    for i in range(len(all_marks) - 1):
+        left = all_marks[i]
+        right = all_marks[i + 1]
+
+        if left <= min_index <= right:
+            ratio = (min_index - left) / (right - left)  # 0~1 사이 실수
+            real_value = round(i + ratio, 1)
+            print(f"실수형 예측값: {real_value:.3f} (index {i} ~ {i+1} 사이)")
+            return real_value
+    # closest_index = min(range(len(all_marks)), key=lambda i: abs(all_marks[i] - min_index))
+    # print(f"가장 가까운 인덱스: {closest_index}, 값: {all_marks[closest_index]}")
+    # return closest_index, all_marks[closest_index]
+
+
 
 @router.post("/process", response_model=AnalysisResponse, responses={400: {"model": ErrorResponse}})
 async def process_image(request: Request, file: UploadFile = File(...)):
@@ -237,14 +247,16 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         left_crop_ratio = 0.12
         all_marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
         left_cropped_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):]
-        analysis_image = left_cropped_image[:, all_marks[0]:all_marks[-1]]
+        analysis_image = left_cropped_image[:, :all_marks[14]]
         print("mark cropped image shape:", analysis_image.shape)
 
         analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
-        predict_value, predict_index = get_prediction(all_marks, min_index)
+        predict_value = get_prediction(all_marks, min_index)
+        analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
+        cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
 
         # 처리된 이미지를 PIL로 변환
-        cropped_pil = Image.fromarray(cv2.rotate(analysis_image, cv2.ROTATE_90_COUNTERCLOCKWISE))
+        cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)
         
         # 출력 이미지 저장
@@ -278,7 +290,6 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             min_index=min_index,
             width=width,
             predict_value=predict_value,
-            predict_index=predict_index,
             input_image_url=input_url,
             cropped_image_url=cropped_output_url,
             output_image_url=output_url,

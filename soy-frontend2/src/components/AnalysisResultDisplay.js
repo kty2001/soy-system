@@ -13,8 +13,22 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
 
   // 파일 이름 생성 함수
   const generateFilename = (base) => {
-    const cleaned = values.map(v => (v || "0").replace(/\./g, "_")); // 소수점 → _
+    const cleaned = values.map(v => v === "" ? "0" : parseFloat(v).toFixed(1));
     return `${base}_${cleaned.join("_")}.png`;
+  };
+
+  const downloadImage = async (url, filename) => {
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
   };
 
   return (
@@ -23,25 +37,25 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
       <div className="flex gap-lg flex-wrap">
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">입력 이미지</h3>
-          <div className="p-md flex justify-center items-center bg-black min-h-[300px]">
+          <div className="p-md flex justify-center items-center bg-black" style={{ height: '500px' }}>
             <img 
               src={result.input_image_url} 
               alt="입력 이미지"
-              className="max-w-full max-h-[500px] object-contain"
+              className="max-w-full h-[500px] transform -rotate-90 origin-center object-contain"
             />
           </div>
           <div className="p-md">
             <div className="flex justify-between py-sm">
               <span className="text-textSecondary">크기</span>
               <span className="text-textPrimary font-medium">
-                {result.input_width} x {result.input_height}
+                {result.input_height} x {result.input_width}
               </span>
             </div>
           </div>
         </div>
-      </div>
+      {/* </div>
 
-      <div className="flex gap-lg flex-wrap">
+      <div className="flex gap-lg flex-wrap"> */}
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">크롭 이미지</h3>
           <div className="p-md flex justify-center items-center bg-black min-h-[300px]">
@@ -71,9 +85,10 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
               </span>
             </div>
             <div className="flex justify-end">
-              <a href={result.cropped_image_url} download rel="noopener noreferrer"
-              className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200">
-                이미지 저장</a>
+              <button
+                onClick={() => downloadImage(result.output_image_url, generateFilename("crop"))}
+                className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
+              >이미지 저장</button>
             </div>
           </div>
         </div>
@@ -107,9 +122,10 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
               </span>
             </div>
             <div className="flex justify-end">
-              <a href={result.output_image_url} download={generateFilename("analysis")} rel="noopener noreferrer"
-              className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200">
-                이미지 저장</a>
+              <button
+                onClick={() => downloadImage(result.output_image_url, generateFilename("analysis"))}
+                className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
+              >이미지 저장</button>
             </div>
           </div>
         </div>
@@ -123,7 +139,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
             type="number"
             step="any"
             className="bg-surface border border-border text-textPrimary rounded-md px-2 py-1"
-            placeholder={`에측값 ${idx + 1}`}
+            placeholder={`예측값 ${idx + 1}`}
             value={val}
             onChange={(e) => handleInputChange(idx, e.target.value)}
           />

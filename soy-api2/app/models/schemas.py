@@ -26,8 +26,7 @@ class AnalysisResponse(BaseModel):
     average_angle: float
     min_index: int
     width: int
-    predict_value: int
-    predict_index: int
+    predict_value: Optional[float]
     input_image_url: str
     cropped_image_url: str
     output_image_url: str
