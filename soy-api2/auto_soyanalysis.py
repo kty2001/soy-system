@@ -93,7 +93,7 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     print("left_crop_ratio:", left_crop_ratio)
     print("left_crop_image shape:", left_crop_image.shape)
 
-    pixel_data = left_crop_image[int(h*0.34), :].astype(np.int16)
+    pixel_data = left_crop_image[int(h*0.36), :].astype(np.int16)
     pixel_deriv = np.diff(pixel_data, n=1)
     std_threshold = np.std(pixel_deriv) * 2
 
@@ -121,33 +121,16 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
 
     print("marks:", marks)
     # print("all_marks:", all_marks)
-    for j in marks:
-        cv2.line(left_crop_image, (j, 0), (j, left_crop_image.shape[0]), (0, 0, 0), 2)
-    cv2.imshow("left cropped Image", left_crop_image)
-    cv2.imshow("Cropped Image", crop_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    return marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
-    # return all_marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
-
-def crop_fixed_pixel(image, marks):
-    # gray_crop = image[440:850, 400:1450].copy()
-    gray_crop_crop = image[:, 120:].copy()
-
-    # print(gray_crop.shape)
-    # print(gray_crop_crop.shape)
-
-    image_copy = gray_crop_crop.copy()
-
-    for mark in marks:
-        cv2.line(image_copy, (mark, 0), (mark, image_copy.shape[0]), (0, 0, 0), 1)
-
-    # cv2.imshow("Cropped Image", gray_crop_crop)
+    
+    # for j in marks:
+    #     cv2.line(left_crop_image, (j, 0), (j, left_crop_image.shape[0]), (0, 0, 0), 2)
+    # cv2.imshow("left cropped Image", left_crop_image)
+    # cv2.imshow("Cropped Image", crop_image)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    return image_copy
+    return marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
+    # return all_marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
 
 def analyze_image(image, pixel_values):
     y_raw = image[image.shape[0] // 2, :]
@@ -255,47 +238,27 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         
         # OpenCV로 이미지 읽기
         img = cv2.imread(input_filename)
+        average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+        line_results, line_cropped_image = find_edges_line(rotated_img, 25000, 20000)
+        print("line cropped image shape:", line_cropped_image.shape)
+        
+        left_crop_ratio = 0.12
+        marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
+        # all_marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
+        left_cropped_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):]
+        analysis_image = left_cropped_image[:, :marks[3]]
+        # analysis_image = left_cropped_image[:, :all_marks[15]]
+        print("mark cropped image shape:", analysis_image.shape)
 
-        average_angle = 0
-        predict_value = 0.0
-        marks = [52, 244, 448, 664]
-
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        gray_crop = gray_img[330:740, 332:1382].copy()
-        crop_line_image = crop_fixed_pixel(gray_crop, marks)
-        analysis_graph, width, min_index = analyze_image(crop_line_image, 0)
+        analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
         predict_value = get_prediction(marks, min_index)
-        analysis_image_color = cv2.cvtColor(crop_line_image, cv2.COLOR_GRAY2BGR)
+        # predict_value = get_prediction(all_marks, min_index)
+        analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
 
+        # 처리된 이미지를 PIL로 변환
         cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)
-
-
-
-        # average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
-        # line_results, line_cropped_image = find_edges_line(rotated_img, 25000, 20000)
-        # print("line cropped image shape:", line_cropped_image.shape)
-        
-        # left_crop_ratio = 0.12
-        # marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
-        # # all_marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
-        # left_cropped_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):]
-        # analysis_image = left_cropped_image[:, :marks[3]]
-        # # analysis_image = left_cropped_image[:, :all_marks[15]]
-        # print("mark cropped image shape:", analysis_image.shape)
-
-        # analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
-        # predict_value = get_prediction(marks, min_index)
-        # # predict_value = get_prediction(all_marks, min_index)
-        # analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
-        # cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
-
-        # 처리된 이미지를 PIL로 변환
-        # cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
-        # output_pil = Image.fromarray(analysis_graph)
-
-
         
         # 출력 이미지 저장
         cropped_filename = get_save_path("results", "jpg")

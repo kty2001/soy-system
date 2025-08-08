@@ -40,12 +40,12 @@ const TakePicture = () => {
 
   return (
     <div className="flex flex-col gap-lg mt-lg">
-      <h2 className="text-textPrimary text-2xl mb-md">카메라 촬영</h2>
+      <h2 className="text-textPrimary text-2xl mb-sd"><strong>카메라 촬영</strong></h2>
       <div className="flex gap-lg flex-wrap">
 
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">카메라 화면</h3>
-          <div className="p-md flex justify-center items-center bg-black min-h-[300px]">
+          <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
             <video
               ref={videoRef}
               autoPlay
@@ -66,7 +66,7 @@ const TakePicture = () => {
         {capturedImage && (
           <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
             <h3 className="p-md bg-primary text-white m-0">촬영된 이미지</h3>
-            <div className="p-md flex justify-center items-center bg-black min-h-[300px]">
+            <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
               <img
                 src={capturedImage}
                 alt="Captured"

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, nativeTheme } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -90,6 +90,7 @@ function createWindow() {
         console.log('렌더러 프로세스: root 엘리먼트:', document.getElementById('root'));
       `);
     });
+    console.log(nativeTheme.shouldUseDarkColors);
     
     const fileUrl = url.format({
       pathname: indexPath,
@@ -124,6 +125,8 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  nativeTheme.themeSource = 'light';
+  
   if (!isDev) {
     console.log('서버 실행 경로:', exePath);
     console.log('파일 존재 확인:', fs.existsSync(exePath));
@@ -147,7 +150,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  stopServer(); // Mac에서도 명시적 종료
+  stopServer();
 });
 
 app.on('activate', () => {

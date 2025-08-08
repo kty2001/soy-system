@@ -31,30 +31,6 @@ const Sidebar = () => {
         <FaWaveSquare className="mr-md text-lg" />
         두유 분석
       </NavLink>
-
-      {/* <NavLink 
-        to="/soymilk"
-        className={({ isActive }) => `
-          flex items-center p-md rounded-md mb-sm text-textPrimary
-          transition-colors duration-fast hover:bg-white/5
-          ${isActive ? 'bg-primary text-white' : ''}
-        `}
-      >
-        <FaWaveSquare className="mr-md text-lg" />
-        두유 이미지 처리
-      </NavLink>
-
-      <NavLink 
-        to="/soyvid"
-        className={({ isActive }) => `
-          flex items-center p-md rounded-md mb-sm text-textPrimary
-          transition-colors duration-fast hover:bg-white/5
-          ${isActive ? 'bg-primary text-white' : ''}
-        `}
-      >
-        <FaWaveSquare className="mr-md text-lg" />
-        두유 영상 예측
-      </NavLink> */}
     </nav>
   );
 };

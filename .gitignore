@@ -7,12 +7,14 @@ __pycache__
 results
 uploads
 models
+soy_AI_Analysis
 
 *.pth
 *.pt
 *.exe
 *.7z
 *.zip
+
 
 # Electron
 build

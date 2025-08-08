@@ -25,7 +25,7 @@ const SoyanalysisPage = () => {
 
   return (
     <div className="p-lg">
-      <h1 className="text-textPrimary text-3xl mb-md">두유 농도 분석</h1>
+      <h1 className="text-textPrimary text-3xl mb-md"><strong>두유 농도 분석</strong></h1>
       <p className="text-textSecondary mb-xl max-w-[800px] leading-relaxed">
         두유 이미지의 경계 신호를 분석하여 <strong>min_index</strong>와 <strong>width</strong> 값을 계산합니다.
       </p>
@@ -58,7 +58,10 @@ const SoyanalysisPage = () => {
           <p className="text-textPrimary mt-md">두유 이미지 분석 중...</p>
         </div>
       ) : (
-        <AnalysisResultDisplay result={result} metricName="선명도" />
+        <>
+          <div className="my-xxl" />
+          <AnalysisResultDisplay result={result} metricName="선명도" />
+        </>
       )}
     </div>
   );
