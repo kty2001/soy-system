@@ -29,12 +29,6 @@ const SoyanalysisPage = () => {
       <p className="text-textSecondary mb-xl max-w-[800px] leading-relaxed">
         두유 이미지의 경계 신호를 분석하여 <strong>min_index</strong>와 <strong>width</strong> 값을 계산합니다.
       </p>
-
-      {error && (
-        <div className="p-md bg-error/20 border-l-4 border-error text-textPrimary mb-lg rounded-sm">
-          {error}
-        </div>
-      )}
       
       <TakePicture
         onCapture={(imageDataUrl) => {
@@ -52,6 +46,12 @@ const SoyanalysisPage = () => {
         acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}
         fileTypeDescription="PNG, JPG, BMP 파일만 허용됩니다."
       />
+
+      {error && (
+        <div className="p-md bg-error/20 border-l-4 border-error text-textPrimary mb-lg rounded-sm">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center p-xl bg-surface rounded-md shadow-md">

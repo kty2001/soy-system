@@ -4,6 +4,7 @@ const TakePicture = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
 
   useEffect(() => {
     const startCamera = async () => {
@@ -13,9 +14,11 @@ const TakePicture = () => {
       });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          setIsCameraOn(true);
         }
       } catch (err) {
         console.error("카메라 접근 실패:", err);
+        setIsCameraOn(false);
       }
     };
 
@@ -44,8 +47,16 @@ const TakePicture = () => {
       <div className="flex gap-lg flex-wrap">
 
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
-          <h3 className="p-md bg-primary text-white m-0">카메라 화면</h3>
+          <h3 className="p-md bg-primary text-white m-0 flex items-center justify-between">
+            <span>카메라 화면</span>
+            {isCameraOn && (
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md animate-pulse">
+                ● ON AIR
+              </span>
+            )}
+          </h3>
           <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
+              
             <video
               ref={videoRef}
               autoPlay
