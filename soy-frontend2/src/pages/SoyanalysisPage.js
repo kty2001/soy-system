@@ -5,13 +5,25 @@ import { processSoyanalysis } from '../utils/api';
 import TakePicture from '../components/TakePicture';
 
 const SoyanalysisPage = () => {
+  const [activeTab, setActiveTab] = useState("camera");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const handleCapture = (imageDataUrl) => {
+    console.log('Captured image data URL:', imageDataUrl.slice(0,50));
+    fetch(imageDataUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], "captured_image.png", { type: "image/png" });
+        handleFileDrop(file);
+      });
+  };
+
   const handleFileDrop = async (file) => {
     setLoading(true);
     setError(null);
+    setResult(null);
 
     try {
       const response = await processSoyanalysis(file);
@@ -25,27 +37,50 @@ const SoyanalysisPage = () => {
 
   return (
     <div className="p-lg">
-      <h1 className="text-textPrimary text-3xl mb-md"><strong>두유 농도 분석</strong></h1>
-      <p className="text-textSecondary mb-xl max-w-[800px] leading-relaxed">
-        두유 이미지의 경계 신호를 분석하여 <strong>min_index</strong>와 <strong>width</strong> 값을 계산합니다.
-      </p>
-      
-      <TakePicture
-        onCapture={(imageDataUrl) => {
-          fetch(imageDataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-              const file = new File([blob], "captured_image.png", { type: "image/png" });
-              handleFileDrop(file);
-            });
-        }}
-      />
-      <div className="my-md" />
-      <FileDropzone
-        onFileDrop={handleFileDrop}
-        acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}
-        fileTypeDescription="PNG, JPG, BMP 파일만 허용됩니다."
-      />
+
+      <div className="flex gap-lg flex-wrap">
+        <div className="flex-[1] min-w-[400px]">
+          <div className="flex border-b border-border mt-md">
+            <button
+              className={`flex-1 px-4 py-2 text-lg ${
+                activeTab === "camera"
+                  ? "bg-primary text-white font-semibold"
+                  : "text-textSecondary hover:bg-muted"
+              }`}
+              onClick={() => setActiveTab("camera")}
+            >
+              카메라 촬영
+            </button>
+            <button
+              className={`flex-1 px-4 py-2 text-lg ${
+                activeTab === "file"
+                  ? "bg-primary text-white font-semibold"
+                  : "text-textSecondary hover:bg-muted"
+              }`}
+              onClick={() => setActiveTab("file")}
+            >
+              파일 업로드
+            </button>
+          </div>
+
+          <div className="p-md">
+            {activeTab === "camera" && <TakePicture onCapture={handleCapture} />}
+            {activeTab === "file" && (
+              <div className="min-h-[400px] flex items-center justify-center">
+                <FileDropzone
+                  onFileDrop={handleFileDrop}
+                  acceptedFileTypes={{ "image/*": [".png", ".jpg", ".jpeg", ".bmp"] }}
+                  fileTypeDescription="PNG, JPG, BMP 파일만 허용됩니다."
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-[3] min-w-[400px]">
+          {result && <AnalysisResultDisplay result={result} metricName="선명도" />}
+        </div>
+      </div>
 
       {error && (
         <div className="p-md bg-error/20 border-l-4 border-error text-textPrimary mb-lg rounded-sm">
@@ -53,16 +88,18 @@ const SoyanalysisPage = () => {
         </div>
       )}
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center p-xl bg-surface rounded-md shadow-md">
+      {loading && (
+        <div className="flex flex-col items-center justify-center p-xl bg-surface rounded-md shadow-md mt-lg">
           <p className="text-textPrimary mt-md">두유 이미지 분석 중...</p>
         </div>
-      ) : (
-        <>
-          <div className="my-xxl" />
-          <AnalysisResultDisplay result={result} metricName="선명도" />
-        </>
       )}
+
+      {/* <div className="my-md" />
+      <FileDropzone
+        onFileDrop={handleFileDrop}
+        acceptedFileTypes={{ 'image/*': ['.png', '.jpg', '.jpeg', '.bmp'] }}
+        fileTypeDescription="PNG, JPG, BMP 파일만 허용됩니다."
+      /> */}
     </div>
   );
 };

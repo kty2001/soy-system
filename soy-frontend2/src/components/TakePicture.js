@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-const TakePicture = () => {
+const TakePicture = ({onCapture}) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -10,7 +10,7 @@ const TakePicture = () => {
     const startCamera = async () => {
       try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 } } // 💡 해상도 요청 추가
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 } }
       });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -36,14 +36,19 @@ const TakePicture = () => {
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const imageData = canvas.toDataURL('image/png');
-      setCapturedImage(imageData);
+      const imageDataUrl = canvas.toDataURL('image/png');
+      console.log("Run captureImage", imageDataUrl.slice(0,50));
+
+      if (onCapture) {
+        onCapture(imageDataUrl);
+      }
+      // TODO: 이미지 분석 함수 호출 가능
+      // analyzeImage(imageData);
     }
   };
 
   return (
-    <div className="flex flex-col gap-lg mt-lg">
-      <h2 className="text-textPrimary text-2xl mb-sd"><strong>카메라 촬영</strong></h2>
+    <div className="flex flex-col gap-lg mt-md">
       <div className="flex gap-lg flex-wrap">
 
         <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
@@ -55,13 +60,12 @@ const TakePicture = () => {
               </span>
             )}
           </h3>
-          <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
-              
+          <div className="p-md flex justify-center items-center bg-gray-300 min-h-[500px] overflow-hidden">
             <video
               ref={videoRef}
               autoPlay
               playsInline
-              className="max-w-full max-h-[500px] object-contain"
+              className="object-contain min-w-[500px] h-[500px] transform -rotate-90 origin-center"
             />
           </div>
           <div className="p-md flex justify-end">
@@ -74,25 +78,7 @@ const TakePicture = () => {
           </div>
         </div>
 
-        {capturedImage && (
-          <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
-            <h3 className="p-md bg-primary text-white m-0">촬영된 이미지</h3>
-            <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
-              <img
-                src={capturedImage}
-                alt="Captured"
-                className="max-w-full max-h-[500px] object-contain"
-              />
-            </div>
-            <div className="p-md flex justify-end">
-              <a href={capturedImage} download="captured_image.png"
-                className="inline-block px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
-              >이미지 저장</a>
-            </div>
-          </div>
-        )}
       </div>
-
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );

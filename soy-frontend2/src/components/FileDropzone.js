@@ -23,7 +23,7 @@ const FileDropzone = ({ onFileDrop, acceptedFileTypes, fileTypeDescription }) =>
       {...getRootProps()}
       className={`
         border-2 border-dashed rounded-md p-xl flex flex-col items-center justify-center
-        cursor-pointer transition-all duration-fast mb-lg
+        cursor-pointer transition-all duration-fast mb-xs mt-md h-[660px] w-full
         ${isDragActive ? 'border-primary bg-primary/10' : 'border-border bg-surface'}
         hover:border-primary hover:bg-primary/10
       `}

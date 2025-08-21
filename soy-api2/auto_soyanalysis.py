@@ -18,7 +18,7 @@ router = APIRouter()
 
 def rotate_image(gray_image):
     th1, th2 = 150, 180
-    hough_th, hough_min, hough_max = 150, 50, 50
+    hough_th, hough_min, hough_max = 120, 50, 50
 
     blurred = cv2.GaussianBlur(gray_image, (5, 5), 1.5)
     edges = cv2.Canny(blurred, th1, th2, apertureSize=3)
@@ -36,6 +36,8 @@ def rotate_image(gray_image):
         if angles:
             average_angle = np.mean(angles)
             print(f"Average angle: {average_angle:.2f} degrees")
+    else:
+        print("No lines detected")
 
     (h, w) = gray_image.shape[:2]
     center = (w // 2, h // 2)
@@ -83,9 +85,9 @@ def find_edges_line(img, hor_threshold, ver_threshold):
     return results, cropped_image
 
 def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    equalized = clahe.apply(image)
-    rota_blur = cv2.blur(equalized, (5, 5), 1.5)
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # equalized = clahe.apply(image)
+    rota_blur = cv2.GaussianBlur(image, (5, 5), 1.5)
     crop_blur = rota_blur[crop_lines['top']:crop_lines['bottom'], crop_lines['left']:crop_lines['right']]
     
     left_crop_image = crop_blur[:, int(crop_blur.shape[1]*left_crop_ratio):]
@@ -93,44 +95,46 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     print("left_crop_ratio:", left_crop_ratio)
     print("left_crop_image shape:", left_crop_image.shape)
 
-    pixel_data = left_crop_image[int(h*0.36), :].astype(np.int16)
+    # cv2.line(left_crop_image, (0, int(h*0.35)), (w, int(h*0.35)), (255, 0, 0), 2)
+    # cv2.imshow("Cropped Image", left_crop_image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    pixel_data = left_crop_image[int(h*0.35), :].astype(np.int16)
     pixel_deriv = np.diff(pixel_data, n=1)
     std_threshold = np.std(pixel_deriv) * 2
 
     marks = []
     idx = 0
-    previous_mark = 0
     while idx < len(pixel_deriv):
         if abs(pixel_deriv[idx]) > std_threshold:
-            if pixel_deriv[previous_mark] <= 0 and pixel_deriv[idx] > 0:
-                marks.append((previous_mark + idx) // 2 + 1)
-                idx += 20
-            previous_mark = idx
-            idx += 1
+            marks.append(idx + 3)
+            idx += 180
         else:
             idx += 1
 
-    # all_marks = []
-    # for i in range(len(marks)-1):
-    #     interv = (marks[i+1]-marks[i])//5
-    #     all_marks.extend(list(range(marks[i], marks[i+1]-interv+1, interv)))
-    # all_marks.sort()
-    # all_marks.append(marks[-1])
+    # previous_mark = 0
+    # while idx < len(pixel_deriv):
+    #     if abs(pixel_deriv[idx]) > std_threshold:
+    #         if pixel_deriv[previous_mark] <= 0 and pixel_deriv[idx] > 0:
+    #             marks.append((previous_mark + idx) // 2 + 1)
+    #             idx += 180
+    #         previous_mark = idx
+    #         idx += 1
+    #     else:
+    #         idx += 1
 
-    crop_image = left_crop_image[:, marks[0]:marks[-1]]
+    crop_image = left_crop_image[:, marks[0]:marks[3]]
 
     print("marks:", marks)
-    # print("all_marks:", all_marks)
     
     # for j in marks:
     #     cv2.line(left_crop_image, (j, 0), (j, left_crop_image.shape[0]), (0, 0, 0), 2)
     # cv2.imshow("left cropped Image", left_crop_image)
-    # cv2.imshow("Cropped Image", crop_image)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
     return marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
-    # return all_marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
 
 def analyze_image(image, pixel_values):
     y_raw = image[image.shape[0] // 2, :]
@@ -164,7 +168,15 @@ def analyze_image(image, pixel_values):
     axs[0].grid(True)
     axs[0].set_xlim(0, image.shape[1])
 
-    # ax1 = axs[1]
+    axs[1].plot(x, y_deriv_smooth, color='red', label='1st Deriv Smooth', linewidth=2)
+    axs[1].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
+    axs[1].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
+    axs[1].axvline(x=min_index+width, color='blue', linestyle='--')
+    axs[1].legend()
+    axs[1].grid(True)
+    axs[1].set_xlim(0, image.shape[1])
+
+    # ax1 = axs[2]
     # ax1.plot(pixel_values[0], color='b', label='pixel_data')
     # ax1.set_xlabel("Index")
     # ax1.set_ylabel("Pixel data", color='b')
@@ -177,14 +189,6 @@ def analyze_image(image, pixel_values):
     #     ax2.axvline(x=mark, color='g', linestyle='--', linewidth=1, label='marks')
     # ax2.set_ylabel("pixel_deriv", color='r')
     # ax2.tick_params(axis='y', labelcolor='r')
-
-    axs[1].plot(x, y_deriv_smooth, color='red', label='1st Deriv Smooth', linewidth=2)
-    axs[1].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
-    axs[1].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
-    axs[1].axvline(x=min_index+width, color='blue', linestyle='--')
-    axs[1].legend()
-    axs[1].grid(True)
-    axs[1].set_xlim(0, image.shape[1])
 
     plt.tight_layout()
 
@@ -223,20 +227,16 @@ async def process_image(request: Request, file: UploadFile = File(...)):
     start_time = time.time()
     
     try:
-        # 파일 확장자 확인
         if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
             raise HTTPException(status_code=400, detail="지원되지 않는 파일 형식입니다. PNG, JPG, JPEG, BMP 파일만 허용됩니다.")
         
-        # 파일 읽기
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")  # RGB로 변환
         input_w, input_h = image.size
         
-        # 입력 이미지 저장
         input_filename = get_save_path("uploads", "jpg")
         image.save(input_filename)
         
-        # OpenCV로 이미지 읽기
         img = cv2.imread(input_filename)
         average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
         line_results, line_cropped_image = find_edges_line(rotated_img, 25000, 20000)
@@ -244,29 +244,23 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         
         left_crop_ratio = 0.12
         marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
-        # all_marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
         left_cropped_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):]
         analysis_image = left_cropped_image[:, :marks[3]]
-        # analysis_image = left_cropped_image[:, :all_marks[15]]
         print("mark cropped image shape:", analysis_image.shape)
 
         analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
         predict_value = get_prediction(marks, min_index)
-        # predict_value = get_prediction(all_marks, min_index)
         analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
 
-        # 처리된 이미지를 PIL로 변환
         cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)
         
-        # 출력 이미지 저장
         cropped_filename = get_save_path("results", "jpg")
         cropped_pil.save(cropped_filename)
         output_filename = get_save_path("results", "jpg")
         output_pil.save(output_filename)
         
-        # 처리 시간 계산
         processing_time = time.time() - start_time
         
         # # 상대 URL 생성
@@ -291,7 +285,6 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             min_index=min_index,
             width=width,
             all_marks=marks,
-            # all_marks=all_marks,
             predict_value=predict_value,
             input_image_url=input_url,
             cropped_image_url=cropped_output_url,

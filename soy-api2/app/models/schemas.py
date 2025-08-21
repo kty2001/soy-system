@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Tuple, Optional
 
 
 class ImageResponse(BaseModel):
@@ -26,7 +26,8 @@ class AnalysisResponse(BaseModel):
     average_angle: float
     min_index: int
     width: int
-    all_marks: List[int]
+    marks: List[int]
+    sorted_marks: List[Tuple[int, int]]
     predict_value: Optional[float]
     input_image_url: str
     cropped_image_url: str

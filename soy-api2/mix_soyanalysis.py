@@ -217,17 +217,6 @@ def get_prediction(marks, min_index):
     sorted_marks = sorted(mark_dict.items(), key=lambda x: x[1])
     print("sorted_marks:", sorted_marks)
 
-    if min_index < sorted_marks[0][1]:
-        left_val, left_pos = sorted_marks[0]
-        right_val, right_pos = sorted_marks[1]
-        slope = (right_val - left_val) / (right_pos - left_pos)
-        return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
-    elif min_index > sorted_marks[-1][1]:
-        left_val, left_pos = sorted_marks[-2]
-        right_val, right_pos = sorted_marks[-1]
-        slope = (right_val - left_val) / (right_pos - left_pos)
-        return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
-
     for i in range(len(sorted_marks) - 1):
         left_val, left_pos = sorted_marks[i]
         right_val, right_pos = sorted_marks[i + 1]
@@ -240,6 +229,9 @@ def get_prediction(marks, min_index):
                   f"(눈금 {left_val} ~ {right_val} 사이)")
             return real_value, sorted_marks
         
+    print("예측값을 찾을 수 없습니다. marks:", marks)
+    return None, sorted_marks
+
     # for i in range(len(marks) - 1):
     #     left = marks[i]
     #     right = marks[i + 1]
@@ -268,16 +260,12 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="지원되지 않는 파일 형식입니다. PNG, JPG, JPEG, BMP 파일만 허용됩니다.")
         
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        image = Image.open(io.BytesIO(contents)).convert("RGB")  # RGB로 변환
         input_w, input_h = image.size
         
         input_filename = get_save_path("uploads", "jpg")
         image.save(input_filename)
-
-        rotated_input_pil = image.rotate(90, expand=True)
-        rotated_input_filename = get_save_path("uploads", "jpg")
-        rotated_input_pil.save(rotated_input_filename)
-
+        
         img = cv2.imread(input_filename)
         average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
         line_results, line_cropped_image = find_edges_line(rotated_img, 25000, 20000)
@@ -311,7 +299,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
 
         # 절대 URL 생성
         base_url = str(request.base_url).rstrip("/")
-        input_url = f"{base_url}/uploads/{os.path.basename(rotated_input_filename)}"
+        input_url = f"{base_url}/uploads/{os.path.basename(input_filename)}"
         cropped_output_url = f"{base_url}/results/{os.path.basename(cropped_filename)}"
         output_url = f"{base_url}/results/{os.path.basename(output_filename)}"
 
@@ -325,8 +313,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             average_angle=average_angle,
             min_index=min_index,
             width=width,
-            marks=marks,
-            sorted_marks=sorted_marks,
+            all_marks=sorted_marks,
             predict_value=predict_value,
             input_image_url=input_url,
             cropped_image_url=cropped_output_url,
