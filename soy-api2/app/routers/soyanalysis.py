@@ -84,13 +84,13 @@ def find_edges_line(img, hor_threshold, ver_threshold):
 
     return results, cropped_image
 
-def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
+def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0, right_crop_ratio=0):
     # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     # equalized = clahe.apply(image)
     rota_blur = cv2.GaussianBlur(image, (5, 5), 1.5)
     crop_blur = rota_blur[crop_lines['top']:crop_lines['bottom'], crop_lines['left']:crop_lines['right']]
     
-    left_crop_image = crop_blur[:, int(crop_blur.shape[1]*left_crop_ratio):]
+    left_crop_image = crop_blur[:, int(crop_blur.shape[1]*left_crop_ratio):int(crop_blur.shape[1]*right_crop_ratio)]
     h, w = left_crop_image.shape 
     print("left_crop_ratio:", left_crop_ratio)
     print("left_crop_image shape:", left_crop_image.shape)
@@ -106,6 +106,7 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
 
     marks = []
     idx = 0
+
     while idx < len(pixel_deriv):
         if abs(pixel_deriv[idx]) > std_threshold:
             marks.append(idx + 3)
@@ -124,8 +125,6 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     #     else:
     #         idx += 1
 
-    crop_image = left_crop_image[:, marks[0]:marks[3]]
-
     print("marks:", marks)
     
     # for j in marks:
@@ -134,7 +133,7 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    return marks, crop_image, (pixel_data, pixel_deriv, std_threshold, marks)
+    return marks, (pixel_data, pixel_deriv, std_threshold, marks)
 
 def analyze_image(image, pixel_values):
     y_raw = image[image.shape[0] // 2, :]
@@ -203,42 +202,46 @@ def analyze_image(image, pixel_values):
     return img_np, width, min_index
 
 def get_prediction(marks, min_index):
-    mark_dict = {}
-    for mark in marks:
-        if 40 < mark < 80 and 0 not in mark_dict:
-            mark_dict[0] = mark
-        elif 220 < mark < 260 and 5 not in mark_dict:
-            mark_dict[5] = mark
-        elif 420 < mark < 460 and 10 not in mark_dict:
-            mark_dict[10] = mark
-        elif 640 < mark < 680 and 15 not in mark_dict:
-            mark_dict[15] = mark
+    try:
+        mark_dict = {}
+        for mark in marks:
+            if 20 < mark < 80 and 0 not in mark_dict:
+                mark_dict[0] = mark
+            elif 220 < mark < 260 and 5 not in mark_dict:
+                mark_dict[5] = mark
+            elif 420 < mark < 460 and 10 not in mark_dict:
+                mark_dict[10] = mark
+            elif 640 < mark < 680 and 15 not in mark_dict:
+                mark_dict[15] = mark
 
-    sorted_marks = sorted(mark_dict.items(), key=lambda x: x[1])
-    print("sorted_marks:", sorted_marks)
+        sorted_marks = sorted(mark_dict.items(), key=lambda x: x[1])
+        print("sorted_marks:", sorted_marks)
 
-    if min_index < sorted_marks[0][1]:
-        left_val, left_pos = sorted_marks[0]
-        right_val, right_pos = sorted_marks[1]
-        slope = (right_val - left_val) / (right_pos - left_pos)
-        return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
-    elif min_index > sorted_marks[-1][1]:
-        left_val, left_pos = sorted_marks[-2]
-        right_val, right_pos = sorted_marks[-1]
-        slope = (right_val - left_val) / (right_pos - left_pos)
-        return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
+        if min_index < sorted_marks[0][1]:
+            left_val, left_pos = sorted_marks[0]
+            right_val, right_pos = sorted_marks[1]
+            slope = (right_val - left_val) / (right_pos - left_pos)
+            return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
+        elif min_index > sorted_marks[-1][1]:
+            left_val, left_pos = sorted_marks[-2]
+            right_val, right_pos = sorted_marks[-1]
+            slope = (right_val - left_val) / (right_pos - left_pos)
+            return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
 
-    for i in range(len(sorted_marks) - 1):
-        left_val, left_pos = sorted_marks[i]
-        right_val, right_pos = sorted_marks[i + 1]
+        for i in range(len(sorted_marks) - 1):
+            left_val, left_pos = sorted_marks[i]
+            right_val, right_pos = sorted_marks[i + 1]
 
-        # min_index가 두 눈금 사이에 있을 때
-        if left_pos <= min_index <= right_pos:
-            ratio = (min_index - left_pos) / (right_pos - left_pos)  # 0~1 사이
-            real_value = round(left_val + ratio * (right_val - left_val), 1)
-            print(f"실수형 예측값: {real_value:.3f} "
-                  f"(눈금 {left_val} ~ {right_val} 사이)")
-            return real_value, sorted_marks
+            # min_index가 두 눈금 사이에 있을 때
+            if left_pos <= min_index <= right_pos:
+                ratio = (min_index - left_pos) / (right_pos - left_pos)
+                real_value = round(left_val + ratio * (right_val - left_val), 1)
+                print(f"실수형 예측값: {real_value:.3f} "
+                    f"(눈금 {left_val} ~ {right_val} 사이)")
+                return real_value, sorted_marks
+            
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"이미지 처리 중 오류가 발생했습니다: {len(sorted_marks)}개 눈금 감지 - {str(e)}")
         
     # for i in range(len(marks) - 1):
     #     left = marks[i]
@@ -284,15 +287,19 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         print("line cropped image shape:", line_cropped_image.shape)
         
         left_crop_ratio = 0.12
-        marks, mark_crop_image, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio=left_crop_ratio)
-        left_cropped_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):]
-        analysis_image = left_cropped_image[:, :marks[3]]
+        right_crop_ratio = 0.75
+        marks, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio, right_crop_ratio)
+        analysis_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):int(line_cropped_image.shape[1]*right_crop_ratio)]
         print("mark cropped image shape:", analysis_image.shape)
 
         analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
         predict_value, sorted_marks = get_prediction(marks, min_index)
         analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
+        
+        # 5 line draw
+        # for sorted_mark in sorted_marks:
+        #     cv2.line(analysis_image_color, (sorted_mark[1], 0), (sorted_mark[1], analysis_image_color.shape[0]), (0, 0, 0), 2)
 
         cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)

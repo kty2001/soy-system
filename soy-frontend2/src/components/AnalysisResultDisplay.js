@@ -169,7 +169,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
             downloadImage(result.cropped_image_url, `${folderName}/${generateFilename("cropped")}`);
             downloadImage(result.output_image_url, `${folderName}/${generateFilename("analysis")}`);
           }}
-          className="inline-block mt-md px-64 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
+          className="inline-block mt-md px-6 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200 min-w-[300px] text-center"
         >
           이미지 저장
         </button>

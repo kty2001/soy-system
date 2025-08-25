@@ -1,6 +1,6 @@
 {
   "name": "soy-frontend",
-  "version": "0.9.5",
+  "version": "0.10.2",
   "private": true,
   "main": "main.js",
   "homepage": ".",
@@ -87,7 +87,7 @@
       "output": "dist"
     },
     "win": {
-      "target": "zip",
+      "target": "nsis",
       "icon": "assets/syfood_logo.ico",
       "signAndEditExecutable": false
     },
