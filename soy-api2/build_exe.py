@@ -152,8 +152,6 @@ a = Analysis(
         'uvicorn.lifespan',
         'uvicorn.lifespan.on',
         'app.routers.soyanalysis',
-        'app.routers.soymilk',
-        'app.routers.soyvid',
         'http.server',
     ],
     hookspath=[],

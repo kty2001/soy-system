@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 const TakePicture = ({onCapture}) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [capturedImage, setCapturedImage] = useState(null);
+  // const [capturedImage, setCapturedImage] = useState(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
 
   useEffect(() => {

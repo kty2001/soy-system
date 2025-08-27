@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from app.routers import soyanalysis, soymilk, soyvid
+from app.routers import soyanalysis
 
 # 경로 설정 (PyInstaller 패키징 고려)
 if getattr(sys, 'frozen', False):
@@ -41,8 +41,8 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(soyanalysis.router, prefix="/api/soyanalysis", tags=["Soy Analysis"])
-# app.include_router(soymilk.router, prefix="/api/soymilk", tags=["Soy Debluring"])
 # app.include_router(soyvid.router, prefix="/api/soyvid", tags=["Soy Debluring Video"])
+# app.include_router(soymilk.router, prefix="/api/soymilk", tags=["Soy Debluring"])
 
 # 정적 파일 서빙 (처리된 이미지 등을 저장)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
