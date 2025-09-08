@@ -9,6 +9,7 @@ from PIL import Image
 from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
+from scipy.ndimage import gaussian_filter1d
 from fastapi import Request, APIRouter, UploadFile, File, HTTPException
 
 from app.models.schemas import AnalysisResponse, ErrorResponse
@@ -109,7 +110,7 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0, right_crop_ratio=
 
     while idx < len(pixel_deriv):
         if abs(pixel_deriv[idx]) > std_threshold:
-            marks.append(idx + 3)
+            marks.append(idx + 2)
             idx += 180
         else:
             idx += 1
@@ -135,7 +136,10 @@ def crop_zero2fifth(image, crop_lines=None, left_crop_ratio=0, right_crop_ratio=
 
     return marks, (pixel_data, pixel_deriv, std_threshold, marks)
 
-def analyze_image(image, pixel_values):
+def analyze_image(image):
+    
+    image = cv2.GaussianBlur(image, (5, 5), 0)
+
     y_raw = image[image.shape[0] // 2, :]
     x = np.arange(len(y_raw))
 
@@ -201,6 +205,142 @@ def analyze_image(image, pixel_values):
 
     return img_np, width, min_index
 
+def analyze_analyze(image):
+    
+    y_raw = image[image.shape[0] // 2, :]
+    x = np.arange(len(y_raw))
+
+    # wl = 31
+    # y_smooth = savgol_filter(y_raw, window_length=wl, polyorder=2)
+    # y_deriv = savgol_filter(y_raw, window_length=wl, polyorder=2, deriv=1)
+    # y_deriv_smooth = savgol_filter(y_deriv, window_length=wl, polyorder=2)
+    # y_deriv2 = np.gradient(y_deriv_smooth)
+    # zero_crossings = np.where(np.diff(np.sign(y_deriv2)) != 0)[0]
+    # print("zero_crossings:", zero_crossings)
+    
+    # ---------------------------------
+    # blur = cv2.GaussianBlur(image, (5, 5), 0)
+    # blur_raw = blur[blur.shape[0] // 2, :]
+    # blur_x = np.arange(len(blur_raw))
+
+    # blur_smooth = savgol_filter(blur_raw, window_length=wl, polyorder=2)
+    # blur_deriv = savgol_filter(blur_raw, window_length=wl, polyorder=2, deriv=1)
+    # blur_deriv_smooth = savgol_filter(blur_deriv, window_length=wl, polyorder=2)
+    
+    # best_sigma, scores, sigmas = select_optimal_sigma(y_raw)
+    y_smooth = gaussian_filter1d(y_raw.astype(float), sigma=20)
+    y_deriv = np.gradient(y_smooth)
+
+    # blur_best_sigma, sigma_per_x, blur_sigmas = select_sigma_snr(y_raw)
+    # print(" blur_best_sigma:", blur_best_sigma)
+    gua_smooth = gaussian_filter1d(y_raw.astype(float), sigma=24)
+    gua_deriv = np.gradient(gua_smooth)
+
+    # ---------------------------------
+
+    min_index = np.argmin(y_deriv)
+    min_value = y_deriv[min_index]
+    min_value2 = min_value / 2
+    min_value2_index = min_index
+    while min_value2_index > 0:
+        if y_deriv[min_value2_index] >= min_value2:
+            break
+        min_value2_index -= 1
+    width = min_index - min_value2_index
+    print("min_index:", min_index, "/ min_value:", min_value)
+    print("min_value2_index:", min_value2_index, "/ min_value2:", min_value2)
+    print("width:", width)
+
+    fig, axs = plt.subplots(2, 1, figsize=(8, 12))
+
+    # axs[0].plot(x, y_smooth, color='red', label='Raw', linewidth=2)
+    # # axs[0].plot(x, blur_smooth, color='cyan', label='Raw', linewidth=2)
+    # axs[0].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
+    # axs[0].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
+    # axs[0].axvline(x=min_index+width, color='blue', linestyle='--')
+    # axs[0].legend()
+    # axs[0].grid(True)
+    # axs[0].set_xlim(0, image.shape[1])
+
+    axs[0].plot(x, y_smooth, color='red', label='1st Deriv Smooth', linewidth=2)
+    axs[0].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
+    axs[0].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
+    axs[0].axvline(x=min_index+width, color='blue', linestyle='--')
+    axs[0].legend()
+    axs[0].grid(True)
+    axs[0].set_xlim(0, image.shape[1])
+
+    axs[1].plot(x, y_deriv, color='red', label='1st Deriv Smooth', linewidth=2)
+    axs[1].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
+    axs[1].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
+    axs[1].axvline(x=min_index+width, color='blue', linestyle='--')
+    axs[1].legend()
+    axs[1].grid(True)
+    axs[1].set_xlim(0, image.shape[1])
+
+    # axs[2].plot(x, gua_deriv, color='red', label='1st Deriv Smooth', linewidth=2)
+    # axs[2].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
+    # axs[2].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
+    # axs[2].axvline(x=min_index+width, color='blue', linestyle='--')
+    # axs[2].legend()
+    # axs[2].grid(True)
+    # axs[2].set_xlim(0, image.shape[1])
+
+    plt.tight_layout()
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    img_pil = Image.open(buf).convert("RGB")
+    img_np = np.array(img_pil)
+
+    plt.close(fig)
+
+    return img_np, width, min_index
+
+# def select_sigma_snr(y_raw, sigmas=np.linspace(4,20,1)):
+#     best_sigma = sigmas[0]
+#     best_score = -np.inf
+#     scores = []
+
+#     for sigma in sigmas:
+#         y_smooth = gaussian_filter1d(y_raw.astype(float), sigma=sigma)
+#         grad = np.gradient(y_smooth)             # 1차 도함수
+#         # 지역 최대 기울기 (경계 강도)
+#         max_grad = np.max(np.abs(grad))
+#         # 잡음 추정: grad의 중간값 주변 절대편차(MAD) 또는 표준편차
+
+#         mask = np.abs(grad) < 0.2 * max_grad
+#         noise = np.std(grad[mask]) if np.any(mask) else np.std(grad)
+
+#         score = (sigma * max_grad) / (noise + 1e-12)
+#         scores.append(score)
+#         if score > best_score:
+#             best_score = score
+#             best_sigma = sigma
+#     return best_sigma, np.array(scores), sigmas
+
+# def select_sigma_scale_space(y_raw, sigma_list=None, gamma=1.0):
+#     if sigma_list is None:
+#         sigma_list = np.concatenate((np.linspace(0.5,3,6), np.linspace(4,20,9)))
+#     y = y_raw.astype(float)
+#     # compute gradient at every sigma
+#     responses = np.zeros((len(sigma_list), y.shape[0]))
+#     for i, s in enumerate(sigma_list):
+#         ys = gaussian_filter1d(y, sigma=s)
+#         grad = np.gradient(ys)
+#         responses[i, :] = (s**gamma) * np.abs(grad)
+
+#     # global approach: pick sigma that maximizes max response across x
+#     max_over_x = responses.max(axis=1)
+#     best_sigma_global = sigma_list[np.argmax(max_over_x)]
+
+#     # per-location sigma: for each x, argmax over sigma -> gives preferred sigma map
+#     sigma_idx_per_x = np.argmax(responses, axis=0)
+#     sigma_per_x = sigma_list[sigma_idx_per_x]
+
+#     return best_sigma_global, sigma_per_x, responses, sigma_list
+
 def get_prediction(marks, min_index):
     try:
         mark_dict = {}
@@ -232,7 +372,6 @@ def get_prediction(marks, min_index):
             left_val, left_pos = sorted_marks[i]
             right_val, right_pos = sorted_marks[i + 1]
 
-            # min_index가 두 눈금 사이에 있을 때
             if left_pos <= min_index <= right_pos:
                 ratio = (min_index - left_pos) / (right_pos - left_pos)
                 real_value = round(left_val + ratio * (right_val - left_val), 1)
@@ -241,17 +380,7 @@ def get_prediction(marks, min_index):
                 return real_value, sorted_marks
             
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"이미지 처리 중 오류가 발생했습니다: {len(sorted_marks)}개 눈금 감지 - {str(e)}")
-        
-    # for i in range(len(marks) - 1):
-    #     left = marks[i]
-    #     right = marks[i + 1]
-
-    #     if left <= min_index <= right:
-    #         ratio = (min_index - left) / (right - left)  # 0~1 사이 실수
-    #         real_value = round((i + ratio) * 5, 1)
-    #         print(f"실수형 예측값: {real_value:.3f} (index {i*5} ~ {(i+1)*5} 사이)")
-    #         return real_value
+        raise HTTPException(status_code=400, detail=f"{len(sorted_marks)}개 눈금 감지 - 조도를 조정하세요")
 
 
 @router.post("/process", response_model=AnalysisResponse, responses={400: {"model": ErrorResponse}})
@@ -264,7 +393,6 @@ async def process_image(request: Request, file: UploadFile = File(...)):
     반환값:
     - 처리된 이미지 정보 및 URL
     """
-    start_time = time.time()
     
     try:
         if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
@@ -283,16 +411,17 @@ async def process_image(request: Request, file: UploadFile = File(...)):
 
         img = cv2.imread(input_filename)
         average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
-        line_results, line_cropped_image = find_edges_line(rotated_img, 25000, 20000)
+        line_results, line_cropped_image = find_edges_line(rotated_img, 30000, 20000)
         print("line cropped image shape:", line_cropped_image.shape)
         
         left_crop_ratio = 0.12
-        right_crop_ratio = 0.75
+        right_crop_ratio = 0.72
         marks, pixel_values = crop_zero2fifth(rotated_img, line_results, left_crop_ratio, right_crop_ratio)
         analysis_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):int(line_cropped_image.shape[1]*right_crop_ratio)]
         print("mark cropped image shape:", analysis_image.shape)
 
-        analysis_graph, width, min_index = analyze_image(analysis_image, pixel_values)
+        # analysis_graph, width, min_index = analyze_image(analysis_image)
+        analysis_graph, width, min_index = analyze_analyze(analysis_image)
         predict_value, sorted_marks = get_prediction(marks, min_index)
         analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
@@ -308,9 +437,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         cropped_pil.save(cropped_filename)
         output_filename = get_save_path("results", "jpg")
         output_pil.save(output_filename)
-        
-        processing_time = time.time() - start_time
-        
+                
         # # 상대 URL 생성
         # input_url = f"/uploads/{os.path.basename(input_filename)}"
         # cropped_output_url = f"/results/{os.path.basename(cropped_filename)}"
@@ -337,8 +464,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
             predict_value=predict_value,
             input_image_url=input_url,
             cropped_image_url=cropped_output_url,
-            output_image_url=output_url,
-            processing_time=processing_time
+            output_image_url=output_url
         )
         
     except Exception as e:

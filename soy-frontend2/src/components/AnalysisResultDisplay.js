@@ -50,7 +50,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
       <h2 className="text-textPrimary text-2xl mb-sm pb-1 border-b border-border"><strong>처리 결과</strong></h2>
       <div className="flex gap-lg flex-wrap">
 
-        <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
+        <div className="flex-[1] min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">입력 이미지</h3>
           <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
             <img 
@@ -69,7 +69,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
           </div>
         </div>
 
-        <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
+        <div className="flex-[1] min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">크롭 이미지</h3>
           <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
             <img 
@@ -106,7 +106,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
           </div>
         </div>
 
-        <div className="flex-1 min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
+        <div className="flex-[1] min-w-[300px] bg-surface rounded-md shadow-md overflow-hidden">
           <h3 className="p-md bg-primary text-white m-0">분석 이미지</h3>
           <div className="p-md flex justify-center items-center bg-gray-300 min-h-[300px]">
             <img 

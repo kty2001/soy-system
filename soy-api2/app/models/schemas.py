@@ -32,7 +32,6 @@ class AnalysisResponse(BaseModel):
     input_image_url: str
     cropped_image_url: str
     output_image_url: str
-    processing_time: float  # 처리 시간 (초)
 
 
 class ErrorResponse(BaseModel):

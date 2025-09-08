@@ -39,7 +39,7 @@ const SoyanalysisPage = () => {
     <div className="p-lg">
 
       <div className="flex gap-lg flex-wrap">
-        <div className="flex-[1] min-w-[400px]">
+        <div className="flex-[1] min-w-[300px]">
           <div className="flex border-b border-border mt-md">
             <button
               className={`flex-1 px-4 py-2 text-lg ${
@@ -77,7 +77,7 @@ const SoyanalysisPage = () => {
           </div>
         </div>
 
-        <div className="flex-[3] min-w-[400px]">
+        <div className="flex-[3] min-w-[300px]">
           {result && <AnalysisResultDisplay result={result} metricName="선명도" />}
         </div>
       </div>

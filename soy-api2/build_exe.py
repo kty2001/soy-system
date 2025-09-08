@@ -54,22 +54,19 @@ import uvicorn
 from pathlib import Path
 
 if any("--multiprocessing-fork" in arg for arg in sys.argv):
-    with open("trace.log", "a", encoding="utf-8") as f:
-        f.write("Detected multiprocessing fork process. Skipping server startup.\\n")
+    print("Detected multiprocessing fork process. Skipping server startup.", file=sys.stderr)
     sys.exit(0)
 
 try:
     from app.main import app
 except Exception as e:
-    with open("import_error.log", "w", encoding="utf-8") as f:
-        f.write(f"app import 실패: {e}\\n")
+    print(f"app import 실패: {e}", file=sys.stderr)
     raise
     
-with open("trace.log", "a", encoding="utf-8") as f:
-    f.write(f"sys.argv: {sys.argv}\\n")
-    f.write(f"sys.executable: {sys.executable}\\n")
-    f.write(f"__file__: {__file__}\\n")
-    f.write(f"cwd: {os.getcwd()}\\n")
+print(f"sys.argv: {sys.argv}", file=sys.stderr)
+print(f"sys.executable: {sys.executable}", file=sys.stderr)
+print(f"__file__: {__file__}", file=sys.stderr)
+print(f"cwd: {os.getcwd()}", file=sys.stderr)
 
 if __name__ == "__main__":
     # 실행 파일 경로 기준으로 작업 디렉토리 설정
@@ -81,11 +78,9 @@ if __name__ == "__main__":
     if getattr(sys, 'frozen', False):
         base_dir = Path(sys._MEIPASS)
         os.chdir(base_dir)
-        with open("trace.log", "a", encoding="utf-8") as f:
-            f.write(f"[AFTER CHDIR] cwd: {os.getcwd()}\\n")    
+        print(f"[AFTER CHDIR] cwd: {os.getcwd()}", file=sys.stderr)
 
-    with open("startup.log", "w", encoding="utf-8") as f:
-        f.write("FastAPI EXE started!\\n")
+    print("FastAPI EXE started!", file=sys.stderr)
 
     try:        
         # 결과 및 업로드 디렉토리 생성
@@ -118,8 +113,7 @@ if __name__ == "__main__":
         print("FastAPI 서버를 시작합니다...")
         uvicorn.run(app, host="127.0.0.1", port=8000, log_config=log_config)
     except Exception as e:
-        with open("error.log", "w", encoding="utf-8") as f:
-            f.write(f"Error starting FastAPI server: {e}\\n")
+        print(f"Error starting FastAPI server: {e}", file=sys.stderr)
 """
 
 # 런처 스크립트 저장 - UTF-8 인코딩 명시
