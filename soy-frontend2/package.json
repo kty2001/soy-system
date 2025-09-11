@@ -1,6 +1,6 @@
 {
   "name": "soy-frontend",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "private": true,
   "main": "main.js",
   "homepage": ".",

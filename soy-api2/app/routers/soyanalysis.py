@@ -8,9 +8,9 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, find_peaks
 from scipy.ndimage import gaussian_filter1d
-from fastapi import Request, APIRouter, UploadFile, File, HTTPException
+from fastapi import Request, APIRouter, UploadFile, File, HTTPException, Form
 
 from app.models.schemas import AnalysisResponse, ErrorResponse
 from app.utils.model_utils import get_save_path
@@ -205,7 +205,7 @@ def analyze_image(image):
 
     return img_np, width, min_index
 
-def analyze_analyze(image):
+def analyze_analyze(image, sigma=24):
     
     y_raw = image[image.shape[0] // 2, :]
     x = np.arange(len(y_raw))
@@ -228,7 +228,7 @@ def analyze_analyze(image):
     # blur_deriv_smooth = savgol_filter(blur_deriv, window_length=wl, polyorder=2)
     
     # best_sigma, scores, sigmas = select_optimal_sigma(y_raw)
-    y_smooth = gaussian_filter1d(y_raw.astype(float), sigma=20)
+    y_smooth = gaussian_filter1d(y_raw.astype(float), sigma=sigma)
     y_deriv = np.gradient(y_smooth)
 
     # blur_best_sigma, sigma_per_x, blur_sigmas = select_sigma_snr(y_raw)
@@ -253,6 +253,13 @@ def analyze_analyze(image):
 
     fig, axs = plt.subplots(2, 1, figsize=(8, 12))
 
+    region = y_deriv[min_value2_index:min_index+width]
+    peaks, _ = find_peaks(-region, prominence=abs(min_value)*0.2)
+    print("peaks:", peaks)
+
+    if len(peaks) > 1:
+        raise HTTPException(status_code=400, detail="더블 딥(double dip) 현상 감지됨 - 측정 불가")
+
     # axs[0].plot(x, y_smooth, color='red', label='Raw', linewidth=2)
     # # axs[0].plot(x, blur_smooth, color='cyan', label='Raw', linewidth=2)
     # axs[0].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
@@ -262,7 +269,7 @@ def analyze_analyze(image):
     # axs[0].grid(True)
     # axs[0].set_xlim(0, image.shape[1])
 
-    axs[0].plot(x, y_smooth, color='red', label='1st Deriv Smooth', linewidth=2)
+    axs[0].plot(x, y_smooth, color='red', label='Pixel Smooth', linewidth=2)
     axs[0].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
     axs[0].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
     axs[0].axvline(x=min_index+width, color='blue', linestyle='--')
@@ -270,7 +277,7 @@ def analyze_analyze(image):
     axs[0].grid(True)
     axs[0].set_xlim(0, image.shape[1])
 
-    axs[1].plot(x, y_deriv, color='red', label='1st Deriv Smooth', linewidth=2)
+    axs[1].plot(x, y_deriv, color='red', label=f'1st Deriv Smooth {sigma}', linewidth=2)
     axs[1].axvline(x=min_index, color='green', linestyle='--', label='Threshold Line')
     axs[1].axvline(x=min_value2_index, color='blue', linestyle='--', label='Boundary Line')
     axs[1].axvline(x=min_index+width, color='blue', linestyle='--')
@@ -384,7 +391,7 @@ def get_prediction(marks, min_index):
 
 
 @router.post("/process", response_model=AnalysisResponse, responses={400: {"model": ErrorResponse}})
-async def process_image(request: Request, file: UploadFile = File(...)):
+async def process_image(request: Request, file: UploadFile = File(...), sigma: float = Form(24)):
     """
     이미지 처리 API (딥러닝 모델 제거, OpenCV 기반 처리)
     
@@ -421,7 +428,7 @@ async def process_image(request: Request, file: UploadFile = File(...)):
         print("mark cropped image shape:", analysis_image.shape)
 
         # analysis_graph, width, min_index = analyze_image(analysis_image)
-        analysis_graph, width, min_index = analyze_analyze(analysis_image)
+        analysis_graph, width, min_index = analyze_analyze(analysis_image, sigma)
         predict_value, sorted_marks = get_prediction(marks, min_index)
         analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)

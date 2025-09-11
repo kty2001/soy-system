@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from app.routers import soyanalysis
@@ -20,8 +21,8 @@ else:
 FRONTEND_BUILD_DIR = BASE_DIR / "soy-frontend" / "build"
 
 # 결과 및 업로드 디렉토리 설정
-UPLOADS_DIR = Path("uploads")
-RESULTS_DIR = Path("results")
+UPLOADS_DIR = Path(tempfile.gettempdir()) / "soy_ai_system" / "uploads"
+RESULTS_DIR = Path(tempfile.gettempdir()) / "soy_ai_system" / "results"
 
 print("app.main.py 진입")
 app = FastAPI(

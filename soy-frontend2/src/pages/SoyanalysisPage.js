@@ -9,6 +9,7 @@ const SoyanalysisPage = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sigma, setSigma] = useState(24);
 
   const handleCapture = (imageDataUrl) => {
     console.log('Captured image data URL:', imageDataUrl.slice(0,50));
@@ -26,7 +27,7 @@ const SoyanalysisPage = () => {
     setResult(null);
 
     try {
-      const response = await processSoyanalysis(file);
+      const response = await processSoyanalysis(file, sigma);
       setResult(response);
     } catch (err) {
       setError(err.message);
@@ -75,7 +76,20 @@ const SoyanalysisPage = () => {
               </div>
             )}
           </div>
+          
+          <div className="mb-xs flex justify-center mt-sm">
+            <input
+              type="number"
+              step="any"
+              value={sigma}
+              onChange={(e) => setSigma(e.target.value)}
+              className="bg-surface border border-border text-textPrimary rounded-md px-2 py-1
+              appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&-moz-appearance:textfield]"
+              placeholder="Sigma Value"
+            />
+          </div>
         </div>
+        
 
         <div className="flex-[3] min-w-[300px]">
           {result && <AnalysisResultDisplay result={result} metricName="선명도" />}

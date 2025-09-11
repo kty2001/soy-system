@@ -3,9 +3,10 @@ import axios from 'axios';
 // const API_URL = process.env.REACT_APP_API_URL || '';
 const API_URL = 'http://localhost:8000';
 
-export const processSoyanalysis = async (file) => {
+export const processSoyanalysis = async (file, sigma) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('sigma', sigma);
 
     try {
       const response = await axios.post(`${API_URL}/api/soyanalysis/process`, formData, {

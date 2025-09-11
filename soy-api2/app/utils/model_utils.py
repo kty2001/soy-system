@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import numpy as np
 # import onnxruntime as ort
 from PIL import Image
@@ -70,6 +71,6 @@ from scipy import signal as scipy_signal
 # 파일 저장 경로 생성
 def get_save_path(directory: str, extension: str) -> str:
     filename = f"{uuid.uuid4()}.{extension}"
-    save_dir = Path(directory)
-    save_dir.mkdir(exist_ok=True)
+    save_dir = Path(tempfile.gettempdir()) / "soy_ai_system" / directory
+    save_dir.mkdir(parents=True, exist_ok=True)
     return str(save_dir / filename) 
