@@ -6,11 +6,6 @@
   "homepage": ".",
   "author": "soy AI Team",
   "description": "soy AI Processing System",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "electron"
-    ]
-  },
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -74,7 +69,7 @@
   "build": {
     "appId": "com.soy.viewer",
     "icon": "public/syfood_logo.ico",
-    "productName": "soy AI System Light",
+    "productName": "soy AI System Light_mk2",
     "files": [
       "main.js",
       "build/**/*",

@@ -31,10 +31,14 @@ const TakePicture = ({onCapture}) => {
     console.log('Video resolution:', video.videoWidth, video.videoHeight);
     
     if (video && canvas) {
+      const targetWidth = 1920;
+      const targetHeight = 1080;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
       const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
 
       const imageDataUrl = canvas.toDataURL('image/png');
       console.log("Run captureImage", imageDataUrl.slice(0,50));
@@ -42,8 +46,6 @@ const TakePicture = ({onCapture}) => {
       if (onCapture) {
         onCapture(imageDataUrl);
       }
-      // TODO: 이미지 분석 함수 호출 가능
-      // analyzeImage(imageData);
     }
   };
 
@@ -60,7 +62,7 @@ const TakePicture = ({onCapture}) => {
               </span>
             )}
           </h3>
-          <div className="p-md flex justify-center items-center bg-gray-300 min-h-[500px] overflow-hidden">
+          <div className="p-md flex justify-center items-center bg-gray-300 overflow-hidden min-h-[600px] aspect-[16/9] w-full max-w-[960px]">
             <video
               ref={videoRef}
               autoPlay

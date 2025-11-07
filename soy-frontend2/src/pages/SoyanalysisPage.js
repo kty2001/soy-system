@@ -97,9 +97,10 @@ const SoyanalysisPage = () => {
       </div>
 
       {error && (
-        <div className="p-md bg-error/20 border-l-4 border-error text-textPrimary mb-lg rounded-sm">
-          {error}
-        </div>
+        <div
+          className="p-md bg-error/20 border-l-4 border-error text-textPrimary mb-lg rounded-sm"
+          dangerouslySetInnerHTML={{ __html: error }}
+        />
       )}
 
       {loading && (

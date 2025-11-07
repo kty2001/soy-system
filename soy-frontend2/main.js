@@ -1,4 +1,5 @@
 const { app, BrowserWindow, nativeTheme } = require('electron');
+const packageJson = require('./package.json');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');

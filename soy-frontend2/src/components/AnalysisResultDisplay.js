@@ -13,14 +13,12 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
 
   const generateFilename = (base) => {
     const cleaned = values.map(v => v === "" ? "0" : parseFloat(v).toFixed(1));
-    return `${base}_${cleaned.join("_")}.png`;
+    return `${base}${result.predict_value}_${cleaned.join("_")}.png`;
   };
 
   const generateFolderName = () => {
     const now = new Date();
-
     const pad = (num) => num.toString().padStart(2, "0");
-
     const year = now.getFullYear().toString().slice(-2);
     const month = pad(now.getMonth() + 1);
     const day = pad(now.getDate());
@@ -85,24 +83,12 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
                 {result.output_width} x {result.output_height}
               </span>
             </div>
-            {/* <div className="flex justify-between py-sm border-b border-border">
-              <span className="text-textSecondary">Average angle</span>
-              <span className="text-textPrimary font-medium">
-                {result.average_angle.toFixed(2)}
-              </span>
-            </div> */}
             <div className="flex justify-between py-sm">
               <span className="text-textSecondary">Predict value</span>
               <span className="text-textPrimary font-medium">
                 {result.predict_value}
               </span>
             </div>
-            {/* <div className="flex justify-end">
-              <button
-                onClick={() => downloadImage(result.output_image_url, generateFilename("crop"))}
-                className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
-              >이미지 저장</button>
-            </div> */}
           </div>
         </div>
 
@@ -134,12 +120,6 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
                 {result.predict_value}
               </span>
             </div>
-            {/* <div className="flex justify-end">
-              <button
-                onClick={() => downloadImage(result.output_image_url, generateFilename("analysis"))}
-                className="inline-block mt-md px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
-              >이미지 저장</button>
-            </div> */}
           </div>
         </div>
       </div>
