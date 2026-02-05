@@ -1,23 +1,20 @@
+# common
 .venv
 build
 dist
-images
-yolo_run
 __pycache__
 results
 uploads
 models
 soy_AI_Analysis
 
-*.pth
-*.pt
-*.exe
-*.7z
-*.zip
+# api
+soy-api2/images
+soy-api2/results
+soy-api2/uploads
 
-
-# Electron
-build
-dist
-node_modules
-server
+# frontend
+soy-frontend2/assets
+soy-frontend2/node_modules
+soy-frontend2/public
+soy-frontend2/server

@@ -59,7 +59,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1600,
     height: 900,
-    icon: path.join(__dirname, 'assets', 'syfood_logo.ico'),
+    icon: path.join(__dirname, 'build', 'syfood_logo.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

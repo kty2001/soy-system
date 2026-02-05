@@ -5,12 +5,12 @@ block_cipher = None
 
 a = Analysis(
     ['launcher.py'],
-    pathex=[r'C:\\Users\\ty\\Documents\\soy-system-light\\soy-api2'],
+    pathex=[r'C:\\Users\\ty\\Documents\\soy-system-light-mk2\\soy-api2'],
     binaries=[],
     datas=[
-        (r'C:\\Users\\ty\\Documents\\soy-system-light\\soy-api2\\models', 'models'),
-        (r'C:\\Users\\ty\\Documents\\soy-system-light\\soy-frontend2\\build', 'soy-frontend2/build'),
-        (r'C:\Users\ty\Documents\soy-system-light\soy-api2\app', 'app'),
+        (r'C:\\Users\\ty\\Documents\\soy-system-light-mk2\\soy-api2\\models', 'models'),
+        (r'C:\\Users\\ty\\Documents\\soy-system-light-mk2\\soy-frontend2\\build', 'soy-frontend2/build'),
+        (r'C:\Users\ty\Documents\soy-system-light-mk2\soy-api2\app', 'app'),
     ],
     hiddenimports=[
         'uvicorn.logging',

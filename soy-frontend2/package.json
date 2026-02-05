@@ -1,6 +1,6 @@
 {
   "name": "soy-frontend",
-  "version": "0.0.10",
+  "version": "0.0.18",
   "private": true,
   "main": "main.js",
   "homepage": ".",
@@ -68,7 +68,7 @@
   "proxy": "http://localhost:8000",
   "build": {
     "appId": "com.soy.viewer",
-    "icon": "public/syfood_logo.ico",
+    "icon": "build/syfood_logo.ico",
     "productName": "soy AI System Light_mk2",
     "files": [
       "main.js",
@@ -78,13 +78,13 @@
       "server/**/*"
     ],
     "directories": {
-      "buildResources": "public",
+      "buildResources": "build",
       "output": "dist"
     },
     "win": {
       "target": "nsis",
-      "icon": "public/syfood_logo.ico",
-      "signAndEditExecutable": false
+      "icon": "build/syfood_logo.ico",
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,
@@ -92,8 +92,8 @@
       "createDesktopShortcut": true,
       "deleteAppDataOnUninstall": true,
       "shortcutName": "soy AI System",
-      "installerIcon": "public/syfood_logo.ico",
-      "uninstallerIcon": "public/syfood_logo.ico"
+      "installerIcon": "build/syfood_logo.ico",
+      "uninstallerIcon": "build/syfood_logo.ico"
     },
     "electronVersion": "24.8.8",
     "asar": false,

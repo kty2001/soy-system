@@ -10,7 +10,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
-from scipy.interpolate import interp1d
 from fastapi import Request, APIRouter, UploadFile, File, HTTPException, Form
 
 from app.models.schemas import AnalysisResponse, ErrorResponse
@@ -49,85 +48,41 @@ def rotate_image(gray_image):
     
     return average_angle, rotated_img
 
-def fixed_edges_line(img):
-    results = {'top': 431, 'bottom': 916, 'left': 400, 'right': 1382}
-
-    cropped_image = img[results['top']:results['bottom'], results['left']:results['right']]
-    print(results)
-    return results, cropped_image
-
 def find_edges_line(img, hor_threshold, ver_threshold):
     h, w = img.shape
     center_y, center_x = h // 2, w // 2
     results = {}
 
     # 상단에서 아래
-    for y in range(int(center_y*1.5)):
+    for y in range(center_y):
         if np.sum(img[y, :]) > hor_threshold:
             results['top'] = y
             break
     else: results['top'] = 0
 
     # 하단에서 위
-    for y in range(h - 1, int(center_y*0.5), -1):
+    for y in range(h - 1, center_y, -1):
         if np.sum(img[y, :]) > hor_threshold:
             results['bottom'] = y
             break
     else: results['bottom'] = h - 1
 
     # 왼쪽에서 오른쪽
-    for x in range(int(center_x*1.5)):
+    for x in range(center_x):
         if np.sum(img[:, x]) > ver_threshold:
             results['left'] = x
             break
     else: results['left'] = 0
 
     # 오른쪽에서 왼쪽
-    for x in range(w - 1, int(center_x*0.5), -1):
+    for x in range(w - 1, center_x, -1):
         if np.sum(img[:, x]) > ver_threshold:
             results['right'] = x
             break
     else: results['right'] = w - 1
 
     cropped_image = img[results['top']:results['bottom'], results['left']:results['right']]
-    print(results)
-    return results, cropped_image
 
-def find_edges_max(img, pixel_threshold, hor_threshold, ver_threshold):
-    h, w = img.shape
-    center_y, center_x = h // 2, w // 2
-    results = {}
-
-    # 상단에서 아래
-    for y in range(int(center_y*1.5)):
-        if np.sum(img[y, :]) > hor_threshold:
-            results['top'] = y
-            break
-    else: results['top'] = 0
-
-    # 하단에서 위
-    for y in range(h - 1, int(center_y*0.5), -1):
-        if np.sum(img[y, :]) > hor_threshold:
-            results['bottom'] = y
-            break
-    else: results['bottom'] = h - 1
-
-    # 왼쪽에서 오른쪽
-    for x in range(int(center_x*1.5)):
-        if np.max(img[:, x]) > pixel_threshold and np.sum(img[:, x]) > ver_threshold:
-            results['left'] = x
-            break
-    else: results['left'] = 0
-
-    # 오른쪽에서 왼쪽
-    for x in range(w - 1, int(center_x*0.5), -1):
-        if np.max(img[:, x]) > pixel_threshold and np.sum(img[:, x]) > ver_threshold:
-            results['right'] = x
-            break
-    else: results['right'] = w - 1
-
-    cropped_image = img[results['top']:results['bottom'], results['left']:results['right']]
-    print(results)
     return results, cropped_image
 
 def crop_zero2fifth(image):
@@ -259,6 +214,8 @@ def calibrate_marks(sorted_marks):
     a, b = np.polyfit(positions, values, 1)
     return a, b
 
+from scipy.interpolate import interp1d
+
 def get_interpolator(sorted_marks):
     if not sorted_marks:
         raise ValueError("sorted_marks is empty")
@@ -274,7 +231,8 @@ def get_interpolator(sorted_marks):
         kind = "quadratic"
     else:
         kind = "cubic"
-    f = interp1d(positions, values, kind="linear", fill_value="extrapolate")
+    f = interp1d(positions, values, kind=kind, fill_value="extrapolate")
+    print(f)
     return f
 
 def get_prediction(marks, min_index):
@@ -298,22 +256,28 @@ def get_prediction(marks, min_index):
         f = get_interpolator(sorted_marks)
         prediction = round(float(f(min_index)), 1)
         return prediction, sorted_marks
-            
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"{len(sorted_marks)}개 눈금 감지 - 조도를 조정하세요")
 
-def get_fixed_prediction(marks, min_index, img_w):
-    try:
-        sorted_marks = [
-            [0, int(img_w*0.116)],
-            [5, int(img_w*0.339)],
-            [10, int(img_w*0.572)],
-            [15, int(img_w*0.826)]
-        ]
+        # if min_index < sorted_marks[0][1]:
+        #     left_val, left_pos = sorted_marks[0]
+        #     right_val, right_pos = sorted_marks[1]
+        #     slope = (right_val - left_val) / (right_pos - left_pos)
+        #     return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
+        # elif min_index > sorted_marks[-1][1]:
+        #     left_val, left_pos = sorted_marks[-2]
+        #     right_val, right_pos = sorted_marks[-1]
+        #     slope = (right_val - left_val) / (right_pos - left_pos)
+        #     return round(left_val + slope * (min_index - left_pos), 1), sorted_marks
 
-        f = get_interpolator(sorted_marks)
-        prediction = round(float(f(min_index)), 1)
-        return prediction, sorted_marks
+        # for i in range(len(sorted_marks) - 1):
+        #     left_val, left_pos = sorted_marks[i]
+        #     right_val, right_pos = sorted_marks[i + 1]
+
+        #     if left_pos <= min_index <= right_pos:
+        #         ratio = (min_index - left_pos) / (right_pos - left_pos)
+        #         real_value = round(left_val + ratio * (right_val - left_val), 1)
+        #         print(f"실수형 예측값: {real_value:.3f} "
+        #             f"(눈금 {left_val} ~ {right_val} 사이)")
+        #         return real_value, sorted_marks
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"{len(sorted_marks)}개 눈금 감지 - 조도를 조정하세요")
@@ -345,27 +309,16 @@ async def process_image(request: Request, file: UploadFile = File(...), sigma: f
         input_filename = get_save_path("uploads", "jpg")
         image.save(input_filename)
 
-        # rotated_input_pil = image.rotate(90, expand=True)
-        # rotated_input_filename = get_save_path("uploads", "jpg")
-        # rotated_input_pil.save(rotated_input_filename)
+        rotated_input_pil = image.rotate(90, expand=True)
+        rotated_input_filename = get_save_path("uploads", "jpg")
+        rotated_input_pil.save(rotated_input_filename)
 
-        img_array = np.fromfile(input_filename, np.uint8)
-        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        img = cv2.imread(input_filename)
         img = cv2.resize(img.copy(), (1920, 1080))
-        gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # average_angle, rotated_img = rotate_image(gray_image)
-        # line_results, line_cropped_image = fixed_edges_line(gray_image)
-        # line_results, line_cropped_image = find_edges_line(gray_image, 24000, 16000)
-        line_results, line_cropped_image = find_edges_max(gray_image, 80, 24000, 8000)
+        average_angle, rotated_img = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+        line_results, line_cropped_image = find_edges_line(rotated_img, 30000, 20000)
         print("line cropped image shape:", line_cropped_image.shape)
         
-        cropped_image = img[line_results['top']-20:line_results['bottom']+20, line_results['left']:line_results['right']]
-        cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB)
-        input_w, input_h = cropped_image.shape[1], cropped_image.shape[0]
-        cropped_input_pil = Image.fromarray(cv2.rotate(cropped_image, cv2.ROTATE_90_COUNTERCLOCKWISE))
-        cropped_input_filename = get_save_path("uploads", "jpg")
-        cropped_input_pil.save(cropped_input_filename)
-
         left_crop_ratio = 0.24
         right_crop_ratio = 0.72
         analysis_image = line_cropped_image[:, int(line_cropped_image.shape[1]*left_crop_ratio):int(line_cropped_image.shape[1]*right_crop_ratio)]
@@ -374,21 +327,14 @@ async def process_image(request: Request, file: UploadFile = File(...), sigma: f
         # analysis_graph, width, min_index = analyze_image(analysis_image)
         analysis_graph, width, min_index = analyze_analyze(analysis_image, sigma)
         marks, pixel_values = crop_zero2fifth(analysis_image)
-        # predict_value, sorted_marks = get_prediction(marks, min_index)
-        predict_value, sorted_marks = get_fixed_prediction(marks, min_index, analysis_image.shape[1])
+        predict_value, sorted_marks = get_prediction(marks, min_index)
         analysis_image_color = cv2.cvtColor(analysis_image, cv2.COLOR_GRAY2BGR)
         cv2.line(analysis_image_color, (min_index, 0), (min_index, analysis_image_color.shape[0]), (0, 0, 255), 2)
-        cv2.rectangle(
-            analysis_image_color,
-            (min_index-30, 2),
-            (min_index+30, analysis_image_color.shape[0]-2),
-            (255, 0, 0),
-            3
-        )
         print("predict_value:", predict_value)
 
-        # for m in sorted_marks:
-        #     cv2.line(analysis_image_color, (m[1], 0), (m[1], analysis_image_color.shape[0]), (0, 0, 0), 2)
+        # 5 line draw
+        # for sorted_mark in sorted_marks:
+        #     cv2.line(analysis_image_color, (sorted_mark[1], 0), (sorted_mark[1], analysis_image_color.shape[0]), (0, 0, 0), 2)
 
         cropped_pil = Image.fromarray(cv2.rotate(analysis_image_color, cv2.ROTATE_90_COUNTERCLOCKWISE))
         output_pil = Image.fromarray(analysis_graph)
@@ -400,7 +346,7 @@ async def process_image(request: Request, file: UploadFile = File(...), sigma: f
 
         # 절대 URL 생성
         base_url = str(request.base_url).rstrip("/")
-        input_url = f"{base_url}/uploads/{os.path.basename(cropped_input_filename)}"
+        input_url = f"{base_url}/uploads/{os.path.basename(rotated_input_filename)}"
         cropped_output_url = f"{base_url}/results/{os.path.basename(cropped_filename)}"
         output_url = f"{base_url}/results/{os.path.basename(output_filename)}"
 
@@ -411,7 +357,7 @@ async def process_image(request: Request, file: UploadFile = File(...), sigma: f
             output_height=cropped_pil.size[1],
             input_metric=1,
             output_metric=1,
-            average_angle=0,
+            average_angle=average_angle,
             min_index=min_index,
             width=width,
             marks=marks,

@@ -92,7 +92,7 @@ const SoyanalysisPage = () => {
         
 
         <div className="flex-[3] min-w-[300px]">
-          {result && <AnalysisResultDisplay result={result} metricName="선명도" />}
+          {result && <AnalysisResultDisplay result={result} metricName="선명도" onCapture={handleCapture}/>}
         </div>
       </div>
 

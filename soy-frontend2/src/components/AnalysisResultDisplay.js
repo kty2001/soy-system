@@ -58,9 +58,9 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
             />
           </div>
           <div className="p-md">
-            <div className="flex justify-between py-sm">
+            <div className="flex justify-between py-sm text-2xl">
               <span className="text-textSecondary">크기</span>
-              <span className="text-textPrimary font-medium">
+              <span className="text-textPrimary font-medium ">
                 {result.input_height} x {result.input_width}
               </span>
             </div>
@@ -77,17 +77,34 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
             />
           </div>
           <div className="p-md">
-            <div className="flex justify-between py-sm border-b border-border">
-              <span className="text-textSecondary">W x H</span>
-              <span className="text-textPrimary font-medium">
-                {result.output_width} x {result.output_height}
-              </span>
-            </div>
-            <div className="flex justify-between py-sm">
-              <span className="text-textSecondary">Predict value</span>
-              <span className="text-textPrimary font-medium">
+            <div className="flex justify-between items-end px-6 py-sm mt-8">
+              <span className="text-textSecondary text-4xl">농도</span>
+              <span className="text-red-600 font-bold text-8xl">
                 {result.predict_value}
               </span>
+            </div>
+
+            <div className="flex gap-md mt-20 mb-4">
+              {/* 이미지 분석 버튼 */}
+              <button
+                onClick={() => window.dispatchEvent(new Event("trigger-camera-capture"))}
+                className="flex-1 px-4 py-4 bg-red-600 text-white text-2xl font-bold rounded-md shadow hover:bg-primary-dark transition duration-200"
+              >
+                측정
+              </button>
+
+              {/* 이미지 저장 버튼 */}
+              <button
+                onClick={() => {
+                  const folderName = generateFolderName();
+                  downloadImage(result.input_image_url, `${folderName}/${generateFilename("input")}`);
+                  downloadImage(result.cropped_image_url, `${folderName}/${generateFilename("cropped")}`);
+                  downloadImage(result.output_image_url, `${folderName}/${generateFilename("analysis")}`);
+                }}
+                className="flex-1 px-4 py-2 bg-green-600 text-white text-2xl font-bold rounded-md shadow hover:bg-secondary-dark transition duration-200"
+              >
+                저장
+              </button>
             </div>
           </div>
         </div>
@@ -101,9 +118,9 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
               className="max-w-full max-h-[500px] object-contain"
             />
           </div>
-          <div className="p-md">
+          <div className="p-md text-2xl">
             <div className="flex justify-between py-sm border-b border-border">
-              <span className="text-textSecondary">Min_index</span>
+              <span className="text-textSecondary">Min Index</span>
               <span className="text-textPrimary font-medium">
                 {result.min_index}
               </span>
@@ -115,7 +132,7 @@ const AnalysisResultDisplay = ({ result, metricName }) => {
               </span>
             </div>
             <div className="flex justify-between py-sm">
-              <span className="text-textSecondary">Predict value</span>
+              <span className="text-textSecondary">Predict Value</span>
               <span className="text-textPrimary font-medium">
                 {result.predict_value}
               </span>

@@ -10,7 +10,7 @@ const TakePicture = ({onCapture}) => {
     const startCamera = async () => {
       try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 } }
+        video: { aspectRatio: { ideal: 4 / 3 }, width: { ideal: 3264 }, height: { ideal: 2448 } }
       });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -28,26 +28,33 @@ const TakePicture = ({onCapture}) => {
   const captureImage = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    console.log('Video resolution:', video.videoWidth, video.videoHeight);
-    
-    if (video && canvas) {
-      const targetWidth = 1920;
-      const targetHeight = 1080;
 
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+    if (!video || !canvas) return;
 
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
 
-      const imageDataUrl = canvas.toDataURL('image/png');
-      console.log("Run captureImage", imageDataUrl.slice(0,50));
+    console.log('Video resolution:', vw, vh);
 
-      if (onCapture) {
-        onCapture(imageDataUrl);
-      }
+    canvas.width = vw;
+    canvas.height = vh;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, vw, vh);
+
+    const imageDataUrl = canvas.toDataURL('image/png');
+
+    if (onCapture) {
+      onCapture(imageDataUrl);
     }
   };
+
+  useEffect(() => {
+    const listener = () => captureImage();
+    window.addEventListener("trigger-camera-capture", listener);
+    return () => window.removeEventListener("trigger-camera-capture", listener);
+  }, []);
+
 
   return (
     <div className="flex flex-col gap-lg mt-md">
@@ -62,12 +69,12 @@ const TakePicture = ({onCapture}) => {
               </span>
             )}
           </h3>
-          <div className="p-md flex justify-center items-center bg-gray-300 overflow-hidden min-h-[600px] aspect-[16/9] w-full max-w-[960px]">
+          <div className="p-md flex justify-center items-center bg-gray-300 overflow-hidden min-h-[600px] aspect-[4/3] w-full max-w-[960px]">
             <video
               ref={videoRef}
               autoPlay
               playsInline
-              className="object-contain min-w-[500px] h-[500px] transform -rotate-90 origin-center"
+              className="object-contain min-w-[400px] h-[600px] transform -rotate-90 origin-center"
             />
           </div>
           <div className="p-md flex justify-end">
@@ -75,7 +82,7 @@ const TakePicture = ({onCapture}) => {
               onClick={captureImage}
               className="px-4 py-2 bg-primary text-white font-semibold rounded-md shadow hover:bg-primary-dark transition duration-200"
             >
-              촬영하기
+            촬영하기
             </button>
           </div>
         </div>
