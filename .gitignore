@@ -1,5 +1,6 @@
 # common
 .venv
+data
 build
 dist
 __pycache__
